@@ -89,77 +89,84 @@ def update_memory(recommendation_text):
         })
     print(f"Memory saved to ransom_ledger.csv. Asset logged: {chosen_asset}")
 
-def execute_calibration_print():
-    """Performs a self-transfer to prove the digital hands are operational."""
-    if not private_key:
-        print("WARNING: PRIVATE_KEY not found. Skipping physical execution.")
+# ... [Keep your imports, fetch_yield_data, read_memory, analyze_skein, and update_memory functions exactly as they are] ...
+
+# --- THE VAULT ROUTER (Testnet Simulation) ---
+# We assign specific addresses to represent the DeFi protocols.
+VAULT_ROUTER = {
+    "STETH": "0x1111111111111111111111111111111111111111", # Lido Vault
+    "WBETH": "0x2222222222222222222222222222222222222222", # Binance Vault
+    "SUSDS": "0x3333333333333333333333333333333333333333", # Sky Vault
+    "WEETH": "0x4444444444444444444444444444444444444444"  # Ether.fi Vault
+}
+
+def execute_reallocation(previous_asset, new_asset):
+    """Executes a transaction ONLY if the AI decides to change its position."""
+    if previous_asset == new_asset:
+        print(f"ACTION: Holding position in {new_asset}. No transaction required. Saving Gas.")
         return
 
-    if not w3.is_connected():
-        print("WARNING: Could not connect to Sepolia blockchain.")
+    print(f"ACTION: Reallocating capital from {previous_asset} to {new_asset}...")
+    
+    if not private_key or not w3.is_connected():
+        print("WARNING: Hands disconnected. Cannot execute physical trade.")
         return
 
-    print("\n--- INITIATING CALIBRATION PRINT (Web3 Self-Transfer) ---")
     try:
-        # 1. Load the Account
         account = w3.eth.account.from_key(private_key)
         my_address = account.address
-        print(f"Digital Hands Authorized for Address: {my_address}")
+        target_vault = VAULT_ROUTER.get(new_asset, my_address) # Default to self if unknown
 
-        # 2. Check Balance
-        balance_wei = w3.eth.get_balance(my_address)
-        balance_eth = w3.from_wei(balance_wei, 'ether')
-        print(f"Current Sepolia Balance: {balance_eth} ETH")
-
-        if balance_eth < 0.0005:
-            print("Insufficient Testnet ETH for calibration print and gas fees.")
-            return
-
-        # 3. Build the Transaction (Sending 0.0001 ETH to ourselves)
         nonce = w3.eth.get_transaction_count(my_address)
-        
-        # We fetch current base fee to ensure our transaction doesn't get stuck
         latest_block = w3.eth.get_block('latest')
         base_fee = latest_block['baseFeePerGas']
         max_priority_fee = w3.to_wei(2, 'gwei')
         max_fee = base_fee * 2 + max_priority_fee
 
+        # Sending 0.001 ETH to the new protocol's vault
         tx = {
             'nonce': nonce,
-            'to': my_address, # Self-transfer
-            'value': w3.to_wei(0.0001, 'ether'),
-            'gas': 21000, # Standard gas limit for a simple ETH transfer
+            'to': target_vault, 
+            'value': w3.to_wei(0.001, 'ether'),
+            'gas': 21000,
             'maxFeePerGas': max_fee,
             'maxPriorityFeePerGas': max_priority_fee,
-            'chainId': 11155111 # Sepolia Chain ID
+            'chainId': 11155111 
         }
 
-        # 4. Sign the Transaction
         signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-
-        # 5. Broadcast to the Network
-        print("Signing transaction and broadcasting to the Ethereum node...")
+        print("Broadcasting reallocation transaction...")
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         
-        print(f"SUCCESS! Calibration Print sent to blockchain.")
+        print(f"SUCCESS! Capital moved to {new_asset} Vault.")
         print(f"View Receipt: https://sepolia.etherscan.io/tx/{w3.to_hex(tx_hash)}")
         
     except Exception as e:
         print(f"Execution Error: {e}")
 
 if __name__ == "__main__":
-    print("--- INITIATING SOVEREIGN SKEIN V0.5 ---")
+    print("--- INITIATING SOVEREIGN SKEIN V0.6 (The Trial) ---")
     market_text, raw_pools = fetch_yield_data()
     
     if "Sensor failure" not in market_text:
         history_text, current_hold = read_memory()
+        print(f"Previous Position: {current_hold}")
+        
         analysis = analyze_skein(market_text, history_text, current_hold)
         print("\n--- GEMINI ANALYSIS ---")
         print(analysis)
+        
+        # Determine the new choice from the output
+        new_hold = current_hold
+        lines = analysis.strip().split('\n')
+        if lines[0].startswith("CHOICE:"):
+            new_hold = lines[0].replace("CHOICE:", "").strip()
+            
         update_memory(analysis)
         
-        # Fire the digital hands!
-        execute_calibration_print()
+        # Trigger the dynamic hands
+        print("\n--- EXECUTION ENGINE ---")
+        execute_reallocation(current_hold, new_hold)
         
         print("\n--- PULSE COMPLETE ---")
     else:
