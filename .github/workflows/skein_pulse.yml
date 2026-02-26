@@ -1,10 +1,13 @@
 name: Sovereign Skein Heartbeat
 
-# When does the AI wake up?
 on:
   schedule:
-    - cron: '0 */6 * * *' # Runs automatically every 6 hours
-  workflow_dispatch:      # Allows us to click a "Run" button manually
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+# Give the Skein permission to write its memory back to the repo
+permissions:
+  contents: write
 
 jobs:
   analyze_market:
@@ -20,10 +23,18 @@ jobs:
           python-version: '3.10'
           
       - name: Install Dependencies
-        run: pip install google-genai requests
+        run: pip install google-genai requests pandas
         
       - name: Fire the Synapse (Run Script)
         env:
-          # This pulls your secret key out of the vault and hands it to the script
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python ransom_engine.py
+        
+      - name: Save Memory to Skein (Commit CSV)
+        run: |
+          git config --global user.name "Sovereign-Skein-Bot"
+          git config --global user.email "skein@bot.com"
+          git add ransom_ledger.csv
+          # Only commit if there are changes to save
+          git diff --quiet && git diff --staged --quiet || git commit -m "Skein Memory Update: Run logged"
+          git push
