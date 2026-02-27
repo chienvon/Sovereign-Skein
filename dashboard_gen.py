@@ -18,7 +18,7 @@ def generate_hud():
         current_val = 0.1 * 2000 # Estimated ETH value for display
         progress = (current_val / target) * 100
 
-        html_template = f"""
+html_template = f"""
         <!DOCTYPE html>
         <html>
         <head>
@@ -39,8 +39,8 @@ def generate_hud():
                 <h1>SENSKEIN TERMINAL <span class="blink">_</span></h1>
                 <hr>
                 <div class="stat">SYSTEM: <span style="color:white">ONLINE</span></div>
-                <div class="stat">CURRENT HOLDING: <span style="color:white">{last_run.get('Asset', 'UNKNOWN')}</span></div>
-                <div class="stat">PULSE DETECTED: <span style="color:white">{last_run.get('Timestamp', 'NEVER')}</span></div>
+                <div class="stat">CURRENT HOLDING: <span style="color:white">{last_run.get('chosen_asset', 'UNKNOWN').upper()}</span></div>
+                <div class="stat">PULSE DETECTED: <span style="color:white">{last_run.get('timestamp', 'NEVER')}</span></div>
                 <hr>
                 <div class="stat">RANSOM PROGRESS: £{current_val:,.2f} / £{target:,.2f}</div>
                 <div class="bar"><div class="progress"></div></div>
