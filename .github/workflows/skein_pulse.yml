@@ -33,3 +33,11 @@ jobs:
           git add ransom_ledger.csv index.html
           git diff --quiet && git diff --staged --quiet || git commit -m "Memory & HUD Update"
           git push
+
+      - name: Upload HUD to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # Tells GitHub to grab the index.html we just made
+
+      - name: Deploy Live HUD
+        uses: actions/deploy-pages@v4
