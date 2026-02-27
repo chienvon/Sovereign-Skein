@@ -117,11 +117,13 @@ def execute_reallocation(previous_asset, new_asset):
         print(f"ACTION: Holding position in {new_asset}. No transaction required. Saving Gas.")
         return
 
-    print(f"ACTION: Reallocating capital from {previous_asset} to {new_asset}...")
-    
-    if not private_key or not w3.is_connected():
-        # [NEW] Alert if the bot is "paralyzed"
-        send_telegram_alert(f"Hands disconnected! Cannot move to {new_asset}.")
+    # [SHOUT 1] Tell the Director we have decided to move
+    send_telegram_alert(f"Decision: Move from {previous_asset} to {new_asset}. Initialising hands...")
+
+    if not w3.is_connected():
+        msg = "CONNECTION FAILURE: Blockchain radio tower (RPC) is not responding."
+        print(msg)
+        send_telegram_alert(msg) # [SHOUT 2] Alert on connection failure
         return
 
     try:
@@ -129,43 +131,22 @@ def execute_reallocation(previous_asset, new_asset):
         my_address = account.address
         target_vault = VAULT_ROUTER.get(new_asset, my_address)
 
-        # --- THE BLAST SHIELD (Skeinese Finger Trap) ---
         balance_wei = w3.eth.get_balance(my_address)
         balance_eth = float(w3.from_wei(balance_wei, 'ether'))
         
         trade_fraction = 0.90
         trade_amount_eth = balance_eth * trade_fraction
-        trade_amount_wei = w3.to_wei(trade_amount_eth, 'ether')
         
-        # [NEW] Pre-flight alert
-        send_telegram_alert(f"Initiating trade: {trade_amount_eth:.4f} ETH moving to {new_asset} vault.")
+        # [SHOUT 3] Tell the Director the exact amount being committed
+        send_telegram_alert(f"Fingerskein active. Committing {trade_amount_eth:.4f} ETH to {new_asset}.")
 
-        # Build the Transaction
-        nonce = w3.eth.get_transaction_count(my_address)
-        latest_block = w3.eth.get_block('latest')
-        base_fee = latest_block['baseFeePerGas']
-        max_priority_fee = w3.to_wei(2, 'gwei')
-        max_fee = base_fee * 2 + max_priority_fee
+        # ... [Keep the rest of your transaction building/signing code] ...
 
-        tx = {
-            'nonce': nonce,
-            'to': target_vault, 
-            'value': trade_amount_wei,
-            'gas': 21000,
-            'maxFeePerGas': max_fee,
-            'maxPriorityFeePerGas': max_priority_fee,
-            'chainId': 11155111 
-        }
-
-        signed_tx = w3.eth.account.sign_transaction(tx, private_key)
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        
-        # [NEW] Success alert
-        send_telegram_alert(f"SUCCESS: {new_asset} reallocation complete. TX: {w3.to_hex(tx_hash)}")
+        send_telegram_alert(f"SUCCESS: Capital moved. Receipt: https://sepolia.etherscan.io/tx/{w3.to_hex(tx_hash)}")
         
     except Exception as e:
-        # [NEW] Failure alert
-        send_telegram_alert(f"CRITICAL EXECUTION ERROR: {e}")
+        send_telegram_alert(f"CRITICAL ERROR during execution: {e}")
 
 if __name__ == "__main__":
     print("--- INITIATING SOVEREIGN SKEIN V0.6 (The Trial) ---")
