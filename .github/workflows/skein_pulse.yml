@@ -30,7 +30,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
         #run: python ransom_engine.py
-        run: test_tele.py
+        run: python test_tele.py
         
       - name: Save Memory to Skein (Commit CSV)
         run: |
