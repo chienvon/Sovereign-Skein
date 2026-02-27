@@ -39,10 +39,14 @@ jobs:
           git diff --quiet && git diff --staged --quiet || git commit -m "Memory & HUD Update"
           git push
 
-      - name: Upload HUD to GitHub Pages
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload HUD Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Tells GitHub to grab the index.html we just made
+          path: '.'
 
       - name: Deploy Live HUD
+        id: deployment
         uses: actions/deploy-pages@v4
