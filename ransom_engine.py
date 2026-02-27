@@ -99,7 +99,17 @@ VAULT_ROUTER = {
     "SUSDS": "0x3333333333333333333333333333333333333333", # Sky Vault
     "WEETH": "0x4444444444444444444444444444444444444444"  # Ether.fi Vault
 }
-
+def send_telegram_alert(message):
+    """Sends a priority alert to the Director's phone."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if token and chat_id:
+        try:
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            requests.post(url, json={"chat_id": chat_id, "text": f"🚨 SKEIN: {message}"}, timeout=10)
+        except Exception as e:
+            print(f"Failed to send Telegram alert: {e}")
+            
 def execute_reallocation(previous_asset, new_asset):
     """Executes a dynamic transaction ONLY if the AI decides to change its position."""
     if previous_asset == new_asset:
@@ -109,35 +119,27 @@ def execute_reallocation(previous_asset, new_asset):
     print(f"ACTION: Reallocating capital from {previous_asset} to {new_asset}...")
     
     if not private_key or not w3.is_connected():
-        print("WARNING: Hands disconnected. Cannot execute physical trade.")
+        # [NEW] Alert if the bot is "paralyzed"
+        send_telegram_alert(f"Hands disconnected! Cannot move to {new_asset}.")
         return
 
     try:
         account = w3.eth.account.from_key(private_key)
         my_address = account.address
-        target_vault = VAULT_ROUTER.get(new_asset, my_address) # Default to self if unknown
-        
+        target_vault = VAULT_ROUTER.get(new_asset, my_address)
+
         # --- THE BLAST SHIELD (Skeinese Finger Trap) ---
-        # 1. Read total balance
         balance_wei = w3.eth.get_balance(my_address)
         balance_eth = float(w3.from_wei(balance_wei, 'ether'))
         
-        print(f"Total Hot Wallet Balance: {balance_eth:.6f} ETH")
-        
-        # 2. Calculate 90% commitment, trap 10% for gas
         trade_fraction = 0.90
         trade_amount_eth = balance_eth * trade_fraction
         trade_amount_wei = w3.to_wei(trade_amount_eth, 'ether')
         
-        print(f"Blast Shield Active: Trapping {(1 - trade_fraction) * 100:.0f}% for network fees.")
-        print(f"Commitment Amount: {trade_amount_eth:.6f} ETH")
-        
-        # 3. Minimum Viable Trade Check
-        if trade_amount_eth < 0.0001:
-            print("WARNING: Insufficient funds to make a meaningful trade. Aborting to save gas.")
-            return
+        # [NEW] Pre-flight alert
+        send_telegram_alert(f"Initiating trade: {trade_amount_eth:.4f} ETH moving to {new_asset} vault.")
 
-        # 4. Build the Transaction
+        # Build the Transaction
         nonce = w3.eth.get_transaction_count(my_address)
         latest_block = w3.eth.get_block('latest')
         base_fee = latest_block['baseFeePerGas']
@@ -155,14 +157,14 @@ def execute_reallocation(previous_asset, new_asset):
         }
 
         signed_tx = w3.eth.account.sign_transaction(tx, private_key)
-        print("Broadcasting dynamic reallocation transaction...")
         tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
         
-        print(f"SUCCESS! {trade_amount_eth:.6f} ETH securely moved to {new_asset} Vault.")
-        print(f"View Receipt: https://sepolia.etherscan.io/tx/{w3.to_hex(tx_hash)}")
+        # [NEW] Success alert
+        send_telegram_alert(f"SUCCESS: {new_asset} reallocation complete. TX: {w3.to_hex(tx_hash)}")
         
     except Exception as e:
-        print(f"Execution Error: {e}")
+        # [NEW] Failure alert
+        send_telegram_alert(f"CRITICAL EXECUTION ERROR: {e}")
 
 if __name__ == "__main__":
     print("--- INITIATING SOVEREIGN SKEIN V0.6 (The Trial) ---")
