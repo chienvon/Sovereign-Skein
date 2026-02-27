@@ -18,6 +18,17 @@ private_key = os.environ.get("PRIVATE_KEY")
 RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com"
 w3 = Web3(Web3.HTTPProvider(RPC_URL))
 
+def send_telegram_alert(message):
+    """Sends a priority alert to the Director's phone."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if token and chat_id:
+        try:
+            url = f"https://api.telegram.org/bot{token}/sendMessage"
+            requests.post(url, json={"chat_id": chat_id, "text": f"🚨 SKEIN: {message}"}, timeout=10)
+        except Exception as e:
+            print(f"Failed to send Telegram alert: {e}")
+            
 def fetch_yield_data():
     """Scans the physical/digital world for 'Ransom' opportunities."""
     print("Scanning DeFi Llama...")
@@ -99,16 +110,6 @@ VAULT_ROUTER = {
     "SUSDS": "0x3333333333333333333333333333333333333333", # Sky Vault
     "WEETH": "0x4444444444444444444444444444444444444444"  # Ether.fi Vault
 }
-def send_telegram_alert(message):
-    """Sends a priority alert to the Director's phone."""
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    if token and chat_id:
-        try:
-            url = f"https://api.telegram.org/bot{token}/sendMessage"
-            requests.post(url, json={"chat_id": chat_id, "text": f"🚨 SKEIN: {message}"}, timeout=10)
-        except Exception as e:
-            print(f"Failed to send Telegram alert: {e}")
             
 def execute_reallocation(previous_asset, new_asset):
     """Executes a dynamic transaction ONLY if the AI decides to change its position."""
@@ -168,6 +169,10 @@ def execute_reallocation(previous_asset, new_asset):
 
 if __name__ == "__main__":
     print("--- INITIATING SOVEREIGN SKEIN V0.6 (The Trial) ---")
+    
+    # [NEW] Immediate Telegram Ping to verify the pulse started
+    send_telegram_alert("Pulse Initiated. Scanning the Skein...")
+    
     market_text, raw_pools = fetch_yield_data()
     
     if "Sensor failure" not in market_text:
@@ -186,9 +191,9 @@ if __name__ == "__main__":
             
         update_memory(analysis)
         
-        # Trigger the dynamic hands
+        # [CRITICAL FIX] Trigger the dynamic hands
         print("\n--- EXECUTION ENGINE ---")
-        execute_reallocation(current_hold, new_hold)
+        execute_reallocation(current_hold, new_hold) # This was the missing line!
         
         print("\n--- PULSE COMPLETE ---")
     else:
