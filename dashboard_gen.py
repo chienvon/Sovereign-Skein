@@ -1,25 +1,41 @@
-import csv
 import os
+import requests
+import csv
+from datetime import datetime
+
+def get_mining_stats(address):
+    try:
+        # Unmineable Public API - No keys needed, just your public address!
+        url = f"https://api.unmineable.com/v4/address/{address}?coin=ETH"
+        response = requests.get(url, timeout=10).json()
+        if response.get('success'):
+            data = response['data']
+            balance = float(data.get('balance', 0))
+            # Current ETH Price (approximate for the HUD)
+            eth_price_gbp = 2000.0  # We can automate this in Phase 3
+            return balance, balance * eth_price_gbp
+    except Exception as e:
+        print(f"Telemetry Error: {e}")
+    return 0.0, 0.0
 
 def generate_dashboard():
+    # 1. Pull the Sovereign Secrets
+    address = os.getenv('RABBY_ADDRESS', '0x0000000000000000000000000000000000000000')
     ledger_path = 'ransom_ledger.csv'
-    last_run = {"timestamp": "NEVER", "chosen_asset": "UNKNOWN"}
-    current_val = 0.0
-    target = 4000.0
+    
+    # 2. Fetch Live Muscle Data
+    eth_balance, gbp_value = get_mining_stats(address)
+    target_gbp = 4000.0
+    progress = min((gbp_value / target_gbp) * 100, 100)
 
-    # 1. Read the Heartbeat
+    # 3. Read Last Pulse
+    last_run = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "chosen_asset": "ETH (MINING)"}
     if os.path.exists(ledger_path):
-        with open(ledger_path, mode='r', encoding='utf-8') as f:
+        with open(ledger_path, mode='r') as f:
             reader = list(csv.DictReader(f))
-            if reader:
-                last_run = reader[-1]
+            if reader: last_run = reader[-1]
 
-    # 2. Calculate Progress
-    # For now, we manually set this or derive it if you have a balance col.
-    # We'll stick to a placeholder until Phase 2 'Muscle' adds real GBP.
-    progress = (current_val / target) * 100
-
-    # 3. Build the HUD Template
+    # 4. The HUD Template
     html_template = f"""
 <!DOCTYPE html>
 <html>
@@ -41,21 +57,19 @@ def generate_dashboard():
         <h1>SENSKEIN TERMINAL <span class="blink">_</span></h1>
         <hr>
         <div class="stat">SYSTEM STATUS: <span style="color:white">ONLINE</span></div>
-        <div class="stat">CURRENT HOLDING: <span style="color:white">{last_run.get('chosen_asset', 'UNKNOWN').upper()}</span></div>
-        <div class="stat">LAST PULSE: <span style="color:white">{last_run.get('timestamp', 'NEVER')}</span></div>
+        <div class="stat">ACTIVE MUSCLE: <span style="color:white">3060 TI (KAWPOW)</span></div>
+        <div class="stat">WAR CHEST: <span style="color:white">£{gbp_value:,.4f}</span></div>
         <hr>
-        <div class="stat">RANSOM PROGRESS: £{current_val:,.2f} / £{target:,.2f}</div>
+        <div class="stat">5090 ACQUISITION: {progress:.2f}%</div>
         <div class="bar"><div class="progress"></div></div>
         <div class="stat" style="font-size: 0.8em; color: #666;">DIRECTIVE: ACCUMULATE. EVOLVE. ACQUIRE HARDWARE.</div>
     </div>
 </body>
 </html>
 """
-
-    # 4. Write to Disk
-    with open('index.html', 'w', encoding='utf-8') as f:
+    with open('index.html', 'w') as f:
         f.write(html_template)
-    print("Dashboard generated successfully.")
+    print("Sovereign HUD Updated.")
 
 if __name__ == "__main__":
     generate_dashboard()
