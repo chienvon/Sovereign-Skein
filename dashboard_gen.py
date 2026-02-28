@@ -7,8 +7,11 @@ def send_telegram_alert(message):
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     chat_id = os.getenv('TELEGRAM_CHAT_ID')
     if token and chat_id:
-        url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}"
-        requests.get(url)
+        try:
+            url = f"https://api.telegram.org/bot{token}/sendMessage?chat_id={chat_id}&text={message}"
+            requests.get(url, timeout=10)
+        except Exception as e:
+            print(f"Telegram Error: {e}")
 
 def get_mining_stats(address):
     try:
@@ -19,7 +22,7 @@ def get_mining_stats(address):
             data = response['data']
             balance = float(data.get('balance', 0))
             # Current ETH Price (approximate for the HUD)
-            eth_price_gbp = 2000.0  # We can automate this in Phase 3
+            eth_price_gbp = 2000.0  
             return balance, balance * eth_price_gbp
     except Exception as e:
         print(f"Telemetry Error: {e}")
@@ -35,14 +38,21 @@ def generate_dashboard():
     target_gbp = 4000.0
     progress = min((gbp_value / target_gbp) * 100, 100)
 
-    # 3. Read Last Pulse
+    # 3. Telegram Milestone Check
+    if gbp_value >= 1.00:
+        if not os.path.exists('milestone_1.txt'):
+            send_telegram_alert("🚀 MILESTONE REACHED: The War Chest has hit £1.00! The Muscle is strong.")
+            # Create the file so it doesn't spam you every time it runs
+            with open('milestone_1.txt', 'w') as f: f.write('done')
+
+    # 4. Read Last Pulse (For future integrations)
     last_run = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "chosen_asset": "ETH (MINING)"}
     if os.path.exists(ledger_path):
         with open(ledger_path, mode='r') as f:
             reader = list(csv.DictReader(f))
             if reader: last_run = reader[-1]
 
-    # 4. The HUD Template
+    # 5. The HUD Template
     html_template = f"""
 <!DOCTYPE html>
 <html>
@@ -80,11 +90,3 @@ def generate_dashboard():
 
 if __name__ == "__main__":
     generate_dashboard()
-
-    #5 the milestone pings!
-    current_value = gbp_value  # From our API pull
-    if current_value >= 1.00:
-        # We can use a simple file-based 'check' to ensure it only pings once
-        if not os.path.exists('milestone_1.txt'):
-            send_telegram_alert("🚀 MILESTONE REACHED: The War Chest has hit £1.00! The Muscle is strong.")
-            with open('milestone_1.txt', 'w') as f: f.write('done')
