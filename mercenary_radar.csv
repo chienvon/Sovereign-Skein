@@ -1,3 +1,4 @@
 timestamp,top_project,top_apy,gemini_verdict
 2026-02-28 17:37:55,NONE,0.0%,VERDICT: REJECT. No pools met the safety (>$1M TVL) and yield (>100% APY) criteria on BSC.
 2026-02-28 17:54:13,NONE,0.0%,VERDICT: REJECT. No pools met the safety (>$1M TVL) and yield (>100% APY) criteria on BSC.
+2026-02-28 18:16:25,zeebu,2626.48%,"Brain Error: 404 models/gemini-1.5-flash-latest is not found for API version v1beta, or is not supported for generateContent. Call ListModels to see the list of available models and their supported methods."
