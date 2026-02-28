@@ -23,7 +23,7 @@ def fetch_defillama_pools():
         valid_pools = []
         for p in pools:
             # Filter: Binance Smart Chain, >$1M TVL, >100% APY
-            if p.get("chain") == "Binance" and p.get("tvlUsd", 0) > 1000000 and p.get("apy", 0) > 100:
+            if p.get("chain") == "Binance" and p.get("tvlUsd", 0) > 1000000 and p.get("apy", 0) > 20:
                 valid_pools.append({
                     "project": p.get("project"),
                     "symbol": p.get("symbol"),
