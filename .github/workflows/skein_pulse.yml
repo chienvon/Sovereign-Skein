@@ -2,60 +2,45 @@ name: Sovereign Skein Pulse
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Runs every 15 minutes!
-  workflow_dispatch: # Allows you to click the button manually
-
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+    - cron: '*/15 * * * *'  # The new 15-minute high-frequency pulse
+  workflow_dispatch:        # Allows manual triggering
 
 jobs:
-  analyze_market:
+  pulse:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
     steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-python@v5
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
-      - run: pip install -r requirements.txt
 
-      - name: Fire the Synapse
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests google-generativeai
+
+      - name: Run Mercenary Radar
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        run: python mercenary_radar.py
+
+      - name: Update Command Center HUD
+        env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python ransom_engine.py
-
-      - name: Update HUD
+          RABBY_ADDRESS: ${{ secrets.RABBY_ADDRESS }}
         run: python dashboard_gen.py
 
-      - name: Save Pulse Memory and HUD
+      - name: Commit and Push Data
         run: |
-          git config --global user.name "Sovereign-Skein-Bot"
-          git config --global user.email "skein@bot.com"
-          git add ransom_ledger.csv index.html
-          git diff --quiet && git diff --staged --quiet || git commit -m "Memory & HUD Update"
+          git config --local user.email "action@github.com"
+          git config --local user.name "Sovereign Skein Auto-Pulse"
+          git add -A
+          git commit -m "Pulse: Radar Data & HUD Update" || echo "No changes to commit"
           git push
-
-      - name: Setup GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload HUD Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
-  deploy_pages:
-    needs: analyze_market
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy Live HUD
-        id: deployment
-        uses: actions/deploy-pages@v4
