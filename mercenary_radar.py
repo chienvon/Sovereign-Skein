@@ -22,8 +22,8 @@ def fetch_defillama_pools():
         
         valid_pools = []
         for p in pools:
-            # Filter: Binance Smart Chain, >$1M TVL, >100% APY
-            if p.get("chain") == "Binance" and p.get("tvlUsd", 0) > 1000000 and p.get("apy", 0) > 20:
+            # Filter: BSC/Binance, >$500k TVL, >20% APY
+            if p.get("chain") in ["Binance", "BSC"] and p.get("tvlUsd", 0) > 500000 and p.get("apy", 0) > 20:
                 valid_pools.append({
                     "project": p.get("project"),
                     "symbol": p.get("symbol"),
@@ -40,7 +40,7 @@ def fetch_defillama_pools():
 
 def analyze_with_gemini(pools):
     if not pools:
-        return "VERDICT: REJECT. No pools met the safety (>$1M TVL) and yield (>100% APY) criteria on BSC."
+        return "VERDICT: REJECT. No pools met the current TVL and APY criteria on the network."
         
     prompt = f"""
     You are a ruthless quantitative Web3 AI. 
