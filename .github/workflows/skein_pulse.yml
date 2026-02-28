@@ -30,17 +30,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests google-generativeai
 
-      - name: Run Mercenary Radar
+      - name: Run Mercenary Radar (Passive Only)
+        if: github.event.inputs.target_url == ''
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python mercenary_radar.py
 
-      - name: Run Bounty Hunter Radar
+      - name: Run Bounty Hunter Radar (Passive Only)
+        if: github.event.inputs.target_url == ''
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python bounty_hunter.py
 
-      - name: Update Command Center HUD
+      - name: Update Command Center HUD (Passive Only)
+        if: github.event.inputs.target_url == ''
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -52,6 +55,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SKEIN_GITHUB_TOKEN: ${{ secrets.SKEIN_GITHUB_TOKEN }}
+          RABBY_ADDRESS: ${{ secrets.RABBY_ADDRESS }}
           TARGET_ISSUE_URL: ${{ github.event.inputs.target_url }}
         run: python bounty_executor.py
 
