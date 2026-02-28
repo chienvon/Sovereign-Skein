@@ -11,7 +11,7 @@ if not api_key:
     exit(1)
 genai.configure(api_key=api_key)
 # Using the fastest, most cost-effective model for high-frequency pulses
-model = genai.GenerativeModel('gemini-1.5-flash') 
+model = genai.GenerativeModel('gemini-2.5-flash') 
 
 def fetch_defillama_pools():
     print("Scanning DefiLlama Yields API...")
