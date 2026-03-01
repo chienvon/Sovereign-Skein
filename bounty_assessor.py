@@ -58,7 +58,7 @@ def main():
     # 2. Assess PENDING targets
     assessed_count = 0
     for row in rows:
-        if row['status'] == 'PENDING' and assessed_count < 2: # Max 2 per pulse
+        if row['status'] == 'PENDING': # Process all pending
             prompt = f"""
             Analyze this GitHub bounty. Title: {row['title']} Details: {row['body_snippet']}
             CRITERIA: If it requires video recording, external Reddit/Twitter posting, or physical hardware, say 'REJECT'.
