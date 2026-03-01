@@ -110,3 +110,26 @@ Please retry in 5.008135195s. [links {
 2026-02-28 23:21:18,zeebu,2702.4%,"The Zeebu (ZBU) pool's 2702.4% APY offers the highest theoretical yield, generating an exact daily profit of £0.444 from your £6 bankroll. Breaking even on the £0.30 gas fee would take precisely 0.675 days. However, this extreme APY, especially from an obscure project like Zeebu, signifies unsustainable tokenomics and catastrophic risk of principal loss. A £6 bankroll is insufficient to justify engaging with such volatility, as rapid depreciation will negate any yield gains.  VERDICT: REJECT"
 2026-02-28 23:44:07,zeebu,2701.56%,"The Zeebu (ZBU) pool, with an astronomical 2701.56% APY, yields an exact daily profit of £0.443993 from a £6 bankroll. Gas fees of £0.30 would be recovered in precisely 0.675677 days, indicating exceptional immediate efficiency. While such an extreme APY signals substantial underlying risk like impermanent loss or token depreciation, for a quantitative paper trade based purely on presented metrics, the immediate return profile is optimal. VERDICT: EXECUTE."
 2026-02-28 23:56:28,zeebu,2701.56%,"The zeebu (ZBU) pool's astounding 2701.56% APY yields an exact daily profit of £0.444 from your £6 bankroll. This allows you to break even on the £0.30 gas fee in a mere 0.68 days. While such outlier APYs signal extreme risk like hyper-inflationary tokenomics or impermanent loss, for a paper trade, the quantitative metrics are overwhelmingly positive. EXECUTE."
+2026-03-01 05:16:38,zeebu,2674.49%,"Brain Error: 429 You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. 
+* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-2.5-flash
+Please retry in 21.677203383s. [links {
+  description: ""Learn more about Gemini API quotas""
+  url: ""https://ai.google.dev/gemini-api/docs/rate-limits""
+}
+, violations {
+  quota_metric: ""generativelanguage.googleapis.com/generate_content_free_tier_requests""
+  quota_id: ""GenerateRequestsPerDayPerProjectPerModel-FreeTier""
+  quota_dimensions {
+    key: ""model""
+    value: ""gemini-2.5-flash""
+  }
+  quota_dimensions {
+    key: ""location""
+    value: ""global""
+  }
+  quota_value: 20
+}
+, retry_delay {
+  seconds: 21
+}
+]"
