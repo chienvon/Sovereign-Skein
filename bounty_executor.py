@@ -11,7 +11,7 @@ def heavy_compute(prompt, api_key):
         print("Executing heavy compute via gemini-2.5-pro (V5 Engine)...")
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model='gemini-2.5-pro',
+            model='gemini-2.5-flash',
             contents=prompt,
         )
         return response.text.strip()
