@@ -17,13 +17,12 @@ def get_telegram_commands(bot_token):
             for update in res["result"]:
                 update_id = update.get("update_id", 0)
                 if update_id > max_update_id:
-                    max_update_id = update_id # Track the highest pointer
+                    max_update_id = update_id
                     
                 text = update.get("message", {}).get("text", "")
                 if text.startswith("/"):
                     commands.append(text)
             
-            # THE QUEUE CLEARER: Advance the pointer and free the memory!
             if max_update_id > 0:
                 requests.get(f"{url}?offset={max_update_id + 1}", timeout=10)
                 
@@ -44,7 +43,7 @@ def check_is_open(url, github_token):
         res = requests.get(api_url, headers=headers).json()
         return res.get('state') == 'open'
     except Exception:
-        return True # Fail open to avoid accidental deletion
+        return True 
 
 def assess_bounty(prompt, api_key):
     try:
@@ -73,9 +72,9 @@ def main():
         
         if action == "/help":
             help_text = (
-                "🤖 <b>Agent Frankenskein V7</b>\n\n"
+                "🤖 <b>Agent Frankenskein V8</b>\n\n"
                 "<b>STRIKE COMMANDS</b>\n"
-                "<code>/draft [id]</code> - Draft with Flash (Free)\n"
+                "<code>/draft [id]</code> - Draft with Flash\n"
                 "<code>/amend [id] [notes]</code> - Rewrite draft\n"
                 "<code>/post [id]</code> - Fire payload to GitHub\n\n"
                 "<b>PULSE COMMANDS</b>\n"
@@ -87,7 +86,7 @@ def main():
             send_telegram(bot_token, chat_id, help_text)
             
         elif action == "/list":
-            active_targets = [r for r in rows if r['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR']]
+            active_targets = [r for r in rows if r['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR', 'AUTO_STRIKE_REQUESTED']]
             if not active_targets:
                 send_telegram(bot_token, chat_id, "📭 <b>Radar Clear.</b> No active targets.")
             else:
@@ -98,7 +97,7 @@ def main():
                 
         elif action == "/refresh":
             for row in rows:
-                if row['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR', 'DRAFT_REQUESTED']:
+                if row['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR', 'DRAFT_REQUESTED', 'AUTO_STRIKE_REQUESTED']:
                     if not check_is_open(row['url'], github_token):
                         row['status'] = 'CLOSED'
                         send_telegram(bot_token, chat_id, f"🗑️ <b>Target #{row['id']} marked CLOSED.</b>\nBounty is no longer active.")
@@ -109,7 +108,7 @@ def main():
                 if row['id'] == target_id:
                     if action == "/draft" and row['status'] in ['MENU_SENT', 'ERROR']:
                         row['status'] = 'DRAFT_REQUESTED'
-                        row['draft_payload'] = "ENGINE:FLASH" # Pro bypassed, Flash is the engine
+                        row['draft_payload'] = "ENGINE:FLASH" 
                     elif action == "/amend" and row['status'] in ['DRAFT_SENT', 'ERROR']:
                         row['status'] = 'AMEND_REQUESTED'
                         row['draft_payload'] = cmd.replace(f"/amend {target_id}", "").strip()
@@ -125,18 +124,25 @@ def main():
     # Process New Bounties
     for row in rows:
         if row['status'] == 'PENDING':
-            prompt = f"Analyze this GitHub bounty. Title: {row['title']} Details: {row['body_snippet']}\nCRITERIA: If it requires video recording, external Reddit/Twitter posting, physical hardware, or is marked as 'AI Agents Only', say 'REJECT'. Otherwise, provide a crisp summary.\nFORMAT STRICTLY AS:\nVERDICT: [CAPABLE or REJECT]\nSUMMARY: [1 sentence explaining the task]\nREQUIREMENTS: [2 bullet points on what needs to be done]\nPLAN: [1 sentence on how you will solve it]"
+            # V8 PROMPT UPGRADE: Teaching the AI to hunt for "AI Agents Only"
+            prompt = f"Analyze this GitHub bounty. Title: {row['title']} Details: {row['body_snippet']}\nCRITERIA: If it requires video recording, external Reddit/Twitter posting, or physical hardware, say 'REJECT'. If the text explicitly requests 'AI Agents Only' or specifically asks for an automated AI worker, output 'VERDICT: AUTO_STRIKE'. For all other standard coding tasks, output 'VERDICT: CAPABLE'.\nFORMAT STRICTLY AS:\nVERDICT: [CAPABLE, AUTO_STRIKE, or REJECT]\nSUMMARY: [1 sentence explaining the task]\nREQUIREMENTS: [2 bullet points on what needs to be done]\nPLAN: [1 sentence on how you will solve it]"
             analysis = assess_bounty(prompt, api_key)
             
             if "VERDICT: REJECT" in analysis or "BRAIN ERROR" in analysis:
                 row['status'] = 'REJECTED'
+            elif "VERDICT: AUTO_STRIKE" in analysis:
+                # V8 FAST LANE: Bypass the menu entirely
+                row['status'] = 'AUTO_STRIKE_REQUESTED'
+                row['draft_payload'] = "ENGINE:FLASH"
+                msg = f"👻 <b>GHOST IN THE MACHINE</b> 👻\n<b>Target ID:</b> #{row['id']}\n<b>Title:</b> {row['title']}\n\nAI-Only Bounty detected. Bypassing human approval. Proceeding to Auto-Strike generation.\nLink: {row['url']}"
+                send_telegram(bot_token, chat_id, msg)
             else:
-                msg = f"🚨 <b>SKEINWATCH V7</b> 🚨\n<b>Target ID:</b> #{row['id']}\n<b>Title:</b> {row['title']}\n\n{analysis}\n\n⚡ Reply <code>/draft {row['id']}</code> to begin.\nLink: {row['url']}"
+                # Standard human-in-the-loop menu
+                msg = f"🚨 <b>SKEINWATCH V8</b> 🚨\n<b>Target ID:</b> #{row['id']}\n<b>Title:</b> {row['title']}\n\n{analysis}\n\n⚡ Reply <code>/draft {row['id']}</code> to begin.\nLink: {row['url']}"
                 send_telegram(bot_token, chat_id, msg)
                 row['status'] = 'MENU_SENT'
 
     with open(BACKLOG_FILE, 'w', newline='', encoding='utf-8') as f:
-        # V7 Headers synchronized with the DictWriter fix
         writer = csv.DictWriter(f, fieldnames=["id", "status", "timestamp", "title", "url", "body_snippet", "draft_payload"])
         writer.writeheader()
         writer.writerows(rows)
