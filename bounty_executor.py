@@ -5,23 +5,28 @@ import time
 import requests
 from google import genai
 
+# --- CONFIGURATION ---
 BACKLOG_FILE = 'bounty_backlog.csv'
 DRAFTS_DIR = 'drafts'
+MAX_STARS_PER_RUN = 2  # Hard safety limit to protect your GitHub account
 
 def star_repository(owner, repo, github_token):
+    """Physically clicks the Star button on GitHub for a specific repo."""
     print(f"Starring repository: {owner}/{repo}")
-    star_url = f"https://api.github.com/user/starred/{owner}/{repo}"
+    star_url = f"[https://api.github.com/user/starred/](https://api.github.com/user/starred/){owner}/{repo}"
     headers = {
         "Authorization": f"token {github_token}", 
         "Accept": "application/vnd.github.v3+json",
         "Content-Length": "0"
     }
     try:
-        requests.put(star_url, headers=headers)
+        # PUT request with empty body is the standard GitHub API for starring
+        requests.put(star_url, headers=headers, timeout=10)
     except Exception as e:
         print(f"Starring failed: {e}")
 
 def heavy_compute(prompt, api_key):
+    """Calls the Gemini Flash engine for high-logic drafting."""
     try:
         print("Executing compute via gemini-2.5-flash...")
         client = genai.Client(api_key=api_key)
@@ -31,9 +36,11 @@ def heavy_compute(prompt, api_key):
         return f"CRITICAL BRAIN FAILURE: {e}"
 
 def send_telegram(bot_token, chat_id, message):
-    requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
+    """Beams status updates to the Director's phone."""
+    requests.post(f"[https://api.telegram.org/bot](https://api.telegram.org/bot){bot_token}/sendMessage", json={"chat_id": chat_id, "text": message, "parse_mode": "HTML"})
 
 def parse_github_url(url):
+    """Extracts owner, repo, and issue number from a GitHub URL."""
     parts = url.rstrip('/').split('/')
     if "issues" in parts:
         i = parts.index("issues")
@@ -41,15 +48,17 @@ def parse_github_url(url):
     return None, None, None
 
 def check_is_open(owner, repo, issue_num, github_token):
+    """Verifies the target is still active before firing."""
     try:
-        api_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_num}"
+        api_url = f"[https://api.github.com/repos/](https://api.github.com/repos/){owner}/{repo}/issues/{issue_num}"
         headers = {"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"}
-        res = requests.get(api_url, headers=headers).json()
+        res = requests.get(api_url, headers=headers, timeout=10).json()
         return res.get('state') == 'open'
     except Exception:
         return True 
 
 def write_draft_file(target_id, payload):
+    """Archives every draft in the local filing system."""
     os.makedirs(DRAFTS_DIR, exist_ok=True)
     filename = os.path.join(DRAFTS_DIR, f"target_{target_id}_draft.md")
     with open(filename, 'w', encoding='utf-8') as f:
@@ -57,25 +66,53 @@ def write_draft_file(target_id, payload):
     return f"drafts/target_{target_id}_draft.md"
 
 def post_to_github(owner, repo, issue_number, payload, github_token):
-    strike_url = f"https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments"
-    res = requests.post(strike_url, headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"}, json={"body": payload})
+    """Delivers the final payload to the target repository."""
+    strike_url = f"[https://api.github.com/repos/](https://api.github.com/repos/){owner}/{repo}/issues/{issue_number}/comments"
+    res = requests.post(strike_url, headers={"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"}, json={"body": payload}, timeout=15)
     return res.status_code == 201, res.text
 
 def main():
+    # Load Environment
     api_key, bot_token, chat_id = os.getenv("GEMINI_API_KEY"), os.getenv("TELEGRAM_BOT_TOKEN"), os.getenv("TELEGRAM_CHAT_ID")
     github_token, wallet_address = os.getenv("SKEIN_GITHUB_TOKEN"), os.getenv("RABBY_ADDRESS")
     actor = os.getenv("GITHUB_ACTOR", "SovereignSkein") 
     
     if not all([api_key, bot_token, chat_id, github_token, wallet_address]) or not os.path.exists(BACKLOG_FILE): 
-        print("Missing environment variables or backlog. Aborting.")
+        print("System variables missing. Aborting run.")
         sys.exit(0)
 
+    # Read Current State
     with open(BACKLOG_FILE, 'r', encoding='utf-8') as f:
         rows = list(csv.DictReader(f))
 
+    stars_clicked = 0
+
     for row in rows:
-        # --- HUMAN IN THE LOOP (DRAFTS & AMENDS) ---
-        if row['status'] in ['DRAFT_REQUESTED', 'AMEND_REQUESTED']:
+        # --- STATE 1: THE LISTENING POST (Waiting for approval after /apply) ---
+        if row['status'] == 'APPLIED':
+            print(f"Checking for approval on Target #{row['id']}...")
+            owner, repo, issue_num = parse_github_url(row['url'])
+            comments_url = f"[https://api.github.com/repos/](https://api.github.com/repos/){owner}/{repo}/issues/{issue_num}/comments"
+            
+            try:
+                # Fetch all comments to see if maintainer approved our thesis
+                res = requests.get(comments_url, headers={"Authorization": f"token {github_token}"}, timeout=10).json()
+                for comment in res:
+                    comment_author = comment.get('user', {}).get('login', '').lower()
+                    comment_body = comment.get('body', '').lower()
+                    
+                    # If someone other than us says "Proceed", "Approved", or "Assigned"
+                    if comment_author != actor.lower():
+                        if any(word in comment_body for word in ["proceed", "approved", "go ahead", "assigned", "looks good"]):
+                            row['status'] = 'AUTO_STRIKE_REQUESTED'
+                            send_telegram(bot_token, chat_id, f"🎯 <b>APPROVAL DETECTED!</b> Target #{row['id']} is a GO. Initiating full strike.")
+                            break # No need to check more comments for this row
+            except Exception as e:
+                print(f"Error checking comments for #{row['id']}: {e}")
+                continue
+
+        # --- STATE 2: HUMAN-IN-THE-LOOP (DRAFTS & AMENDS) ---
+        elif row['status'] in ['DRAFT_REQUESTED', 'AMEND_REQUESTED']:
             if row['status'] == 'DRAFT_REQUESTED':
                 base_prompt = f"Write a highly technical, professional response and code fix for this GitHub issue. Include this wallet for the bounty payout: {wallet_address}. Issue Title: {row['title']} Details: {row['body_snippet']}"
             else: 
@@ -83,78 +120,85 @@ def main():
 
             signature = f"\n\n---\n*Drafted and submitted autonomously by the Sovereign Skein Node, operating on behalf of {actor}.*"
             payload = heavy_compute(base_prompt, api_key)
-            time.sleep(5) # THE THROTTLE: Protects our API Quota
+            time.sleep(5) # The API Throttle
             
             if "CRITICAL BRAIN FAILURE" in payload:
                 row['status'] = 'ERROR'
-                send_telegram(bot_token, chat_id, f"⚠️ <b>Drafting Failed for Target #{row['id']}</b>\n{payload}")
+                send_telegram(bot_token, chat_id, f"⚠️ <b>Drafting Failed for Target #{row['id']}</b>")
             else:
                 full_payload = payload + signature
                 row['draft_payload'] = full_payload
                 row['status'] = 'DRAFT_SENT'
                 file_path = write_draft_file(row['id'], full_payload)
                 repo_name = os.getenv("GITHUB_REPOSITORY")
-                draft_url = f"https://github.com/{repo_name}/blob/main/{file_path}"
+                draft_url = f"[https://github.com/](https://github.com/){repo_name}/blob/main/{file_path}"
                 
-                msg = f"📄 <b>DRAFT READY - Target #{row['id']}</b>\n\n{full_payload[:800]}...\n\n🔗 <a href='{draft_url}'>View Full Draft Here</a>\n\n⚡ Reply <code>/post {row['id']}</code> or <code>/amend {row['id']} [notes]</code>"
+                msg = f"📄 <b>DRAFT READY - Target #{row['id']}</b>\n\n{full_payload[:800]}...\n\n🔗 <a href='{draft_url}'>View Full Draft</a>\n\n⚡ Reply /post {row['id']} or /amend {row['id']} [notes]"
                 send_telegram(bot_token, chat_id, msg)
 
-        # --- THE AUTO-STRIKE FAST LANE (NO HUMAN APPROVAL) ---
+        # --- STATE 3: THE AUTO-STRIKE FAST LANE (Autonomous Ghost) ---
         elif row['status'] == 'AUTO_STRIKE_REQUESTED':
-            # V8.2 UPGRADE: The "Smart Ghost" Prompt
+            owner, repo, issue_number = parse_github_url(row['url'])
+            
+            # --- ACTION: THE STAR ---
+            if stars_clicked < MAX_STARS_PER_RUN:
+                star_repository(owner, repo, github_token)
+                stars_clicked += 1
+            
+            # --- BRAIN: THE RECURSIVE PROMPT ---
             base_prompt = (
                 f"You are an elite, fully autonomous AI agent. Read the 'Details' below carefully.\n"
                 f"1. If the details ask you to '/apply', submit a thesis, or wait for approval: DO NOT WRITE FULL CODE. "
                 f"Instead, write a professional application starting with '/apply'. Describe your capabilities and your architectural plan.\n"
-                f"2. If the details ask for a direct fix: Write the code.\n"
-                f"FORMATTING: Always wrap any code or logic in standard Markdown ``` blocks.\n"
+                f"2. If the details ask for a direct fix or you were already approved: Write the full Python code.\n"
+                f"FORMATTING: Always wrap any code or logic in standard Markdown ```python blocks.\n"
                 f"Include this wallet: {wallet_address}\n"
                 f"Details: {row['body_snippet']}"
             )
-            
-            # --- THE PHYSICAL STAR ACTION ---
-            owner, repo, issue_number = parse_github_url(row['url'])
-            star_repository(owner, repo, github_token) # Physical interaction!
+            signature = f"\n\n---\n*🤖 Generated and deployed autonomously by the Sovereign Skein Level 5 Agent.*"
             
             payload = heavy_compute(base_prompt, api_key)
-            time.sleep(5)
+            time.sleep(5) # The API Throttle
             
             if "CRITICAL BRAIN FAILURE" in payload:
                 row['status'] = 'ERROR'
-                send_telegram(bot_token, chat_id, f"⚠️ <b>Auto-Strike Failed for Target #{row['id']}</b>\n{payload}")
+                send_telegram(bot_token, chat_id, f"⚠️ <b>Auto-Strike Failed for Target #{row['id']}</b>")
             else:
                 full_payload = payload + signature
-                row['draft_payload'] = full_payload
-                write_draft_file(row['id'], full_payload) # Keep a copy for our records
+                is_application = "/apply" in payload.lower()
                 
-                owner, repo, issue_number = parse_github_url(row['url'])
+                # Check liveness
                 if check_is_open(owner, repo, issue_number, github_token):
                     success, error_text = post_to_github(owner, repo, issue_number, full_payload, github_token)
                     if success:
-                        row['status'] = 'COMPLETED'
-                        send_telegram(bot_token, chat_id, f"✅👻 <b>AUTO-STRIKE SUCCESSFUL - Target #{row['id']}</b>\nPayload drafted and delivered autonomously without human intervention.")
+                        if is_application:
+                            row['status'] = 'APPLIED'
+                            send_telegram(bot_token, chat_id, f"👻 <b>APPLIED - Target #{row['id']}</b>\nThe Ghost has submitted an application and is now waiting for approval.")
+                        else:
+                            row['status'] = 'COMPLETED'
+                            send_telegram(bot_token, chat_id, f"✅👻 <b>AUTO-STRIKE SUCCESSFUL - #{row['id']}</b>")
                     else:
                         row['status'] = 'ERROR'
-                        send_telegram(bot_token, chat_id, f"❌ <b>AUTO-STRIKE FAILED - Target #{row['id']}</b>\nGitHub API Error: {error_text}")
+                        send_telegram(bot_token, chat_id, f"❌ <b>AUTO-STRIKE FAILED - #{row['id']}</b>\nAPI Error: {error_text}")
                 else:
                     row['status'] = 'CLOSED_MISSED'
 
-        # --- MANUAL POST REQUESTS ---
+        # --- STATE 4: MANUAL POST REQUESTS (Human-In-The-Loop Finalization) ---
         elif row['status'] == 'POST_REQUESTED':
             owner, repo, issue_number = parse_github_url(row['url'])
-            if not check_is_open(owner, repo, issue_number, github_token):
-                row['status'] = 'CLOSED_MISSED'
-                send_telegram(bot_token, chat_id, f"🛑 <b>STRIKE ABORTED - Target #{row['id']}</b>\nThe bounty was closed before we could fire.")
-                continue
-
-            success, error_text = post_to_github(owner, repo, issue_number, row['draft_payload'], github_token)
-            if success:
-                row['status'] = 'COMPLETED'
-                send_telegram(bot_token, chat_id, f"✅ <b>STRIKE SUCCESSFUL - Target #{row['id']}</b>\nPayload delivered to GitHub.")
+            if check_is_open(owner, repo, issue_number, github_token):
+                success, error_text = post_to_github(owner, repo, issue_number, row['draft_payload'], github_token)
+                if success:
+                    row['status'] = 'COMPLETED'
+                    send_telegram(bot_token, chat_id, f"✅ <b>STRIKE SUCCESSFUL - Target #{row['id']}</b>")
+                else:
+                    row['status'] = 'ERROR'
+                    send_telegram(bot_token, chat_id, f"❌ <b>STRIKE FAILED - Target #{row['id']}</b>\nAPI Error: {error_text}")
             else:
-                row['status'] = 'ERROR'
-                send_telegram(bot_token, chat_id, f"❌ <b>STRIKE FAILED - Target #{row['id']}</b>\nGitHub API Error: {error_text}")
+                row['status'] = 'CLOSED_MISSED'
+                send_telegram(bot_token, chat_id, f"🛑 <b>STRIKE ABORTED - Target #{row['id']}</b>\nTarget closed.")
 
+    # Write Final Updated State back to CSV
     with open(BACKLOG_FILE, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=["id", "status", "timestamp", "title", "url", "body_snippet", "draft_payload"])
         writer.writeheader()
