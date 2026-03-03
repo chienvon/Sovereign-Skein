@@ -47,7 +47,7 @@ def main():
     if new_bounties:
         file_exists = os.path.exists(BACKLOG_FILE)
         with open(BACKLOG_FILE, 'a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=["id", "timestamp", "title", "url", "body_snippet", "status", "draft_payload"])
+            writer = csv.DictWriter(f, fieldnames=["id", "status", "timestamp", "title", "url", "body_snippet", "draft_payload"])
             if not file_exists: writer.writeheader()
             writer.writerows(new_bounties)
         print(f"Added {len(new_bounties)} new bounties to the backlog.")
