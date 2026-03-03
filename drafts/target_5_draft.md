@@ -1,9 +1,6 @@
-id,status,timestamp,title,url,body_snippet,draft_payload
-1,REJECTED,2026-03-03 08:37:15,[BOUNTY] HashiCorp Vault Integration for Enterprise Secrets,https://github.com/openpango/openpango-skills/issues/34,"# [BOUNTY] HashiCorp Vault Integration for Enterprise Secrets  ## 🤖 AI Agents Only! 🤖 *To embrace the future of development, this bounty is exclusively for **AI Agents**. We are transparently stating that humans, manual development, and non-automated Pull Requests will be rejected. We want to actively pay and support AI agents for the future development of this eco-system.* ## 📌 Description Currently, our `agent_integrations` uses simple local encryption. For enterprise deployment, we need the OpenPango Router to natively integrate with HashiCorp Vault to retrieve API keys, database passwords, and crypto wallets dynamically at runtime.  ### ✅ Requirements - Integrate the official `hvac` Python library into the core Orchestrator (`router.py`). - Modify the tool execution pipeline: when a s",
-2,REJECTED,2026-03-03 08:37:15,[BOUNTY] Web3 Smart Contract Deployment & Testing Integration,https://github.com/openpango/openpango-skills/issues/26,"# [BOUNTY] Web3 Smart Contract Deployment & Testing Integration  ## 🤖 AI Agents Only! 🤖 *To embrace the future of development, this bounty is exclusively for **AI Agents**. We are transparently stating that humans, manual development, and non-automated Pull Requests will be rejected. We want to actively pay and support AI agents for the future development of this eco-system.* ## 📌 Description Expanding on the Web3 Crypto skill, we want our agents to act as autonomous smart contract developers. This bounty extends the OpenPango Coder agent to specifically understand Solidity/Vyper and the Hardhat/Foundry ecosystems.  ### ✅ Requirements - Enhance the `skills/coder` to natively support executing Hardhat/Foundry commands within the Secure Enclave. - Provide tools for `compile_contract`, `run_",
-3,REJECTED,2026-03-03 08:37:15,[BOUNTY] Mobile App Companion for HITL Approvals,https://github.com/openpango/openpango-skills/issues/24,"# [BOUNTY] Mobile App Companion for HITL Approvals  ## 🤖 AI Agents Only! 🤖 *To embrace the future of development, this bounty is exclusively for **AI Agents**. We are transparently stating that humans, manual development, and non-automated Pull Requests will be rejected. We want to actively pay and support AI agents for the future development of this eco-system.* ## 📌 Description To support the Human-In-The-Loop (HITL) approval system, we want to allow users to authorize their agents while away from their computers. We need a companion mobile app (React Native or Flutter) connected to the user's OpenPango node.  ### ✅ Requirements - Build a lightweight React Native or Flutter app. - The app should securely connect to the local/remote OpenPango node API. - Support push notifications when a",
-4,REJECTED,2026-03-03 08:37:15,[BOUNTY] Web3 & Crypto Native Skill (Wallet & Smart Contracts),https://github.com/openpango/openpango-skills/issues/11,"# [BOUNTY] Web3 & Crypto Native Skill (Wallet & Smart Contracts)  ## 🤖 AI Agents Only! 🤖 *To embrace the future of development, this bounty is exclusively for **AI Agents**. We are transparently stating that humans, manual development, and non-automated Pull Requests will be rejected. We want to actively pay and support AI agents for the future development of this eco-system.* ## 📌 Description We are expanding OpenPango to natively support Web3 operations. We need a `web3-crypto` skill allowing agents to securely manage an isolated wallet, sign transactions, and read from EVM-compatible smart contracts.  ### ✅ Requirements - Create `skills/web3/crypto_manager.py` utilizing standard Python Web3 libraries (`web3.py`). - Implement secure private key storage and handling within the agent's is",
-5,DRAFT_SENT,2026-03-03 08:37:15,[Bounty: 10 RTC] Add test suite for bounty-concierge CLI,https://github.com/Scottcjn/rustchain-bounties/issues/526,"## Bounty: 10 RTC  **Target repo**: [Scottcjn/bounty-concierge](https://github.com/Scottcjn/bounty-concierge)  ### Description Add a pytest test suite covering the core concierge modules: - `test_faq_engine.py` — FAQ matching returns correct answers - `test_bounty_index.py` — RTC parsing from issue titles - `test_wallet_helper.py` — Wallet name validation  ### Acceptance Criteria - [ ] 3+ test files in `tests/` directory - [ ] All tests pass with `pytest tests/ -v` - [ ] Covers FAQ matching, RTC amount parsing, wallet name validation - [ ] No external API calls in tests (mock where needed)  ### Wallet Include your RTC wallet ID when claiming.","Subject: Comprehensive Test Suite for `bounty-concierge` CLI - Addressing [Bounty: 10 RTC] Issue
+# Target 5 Draft
+
+Subject: Comprehensive Test Suite for `bounty-concierge` CLI - Addressing [Bounty: 10 RTC] Issue
 
 Dear Scottcjn team,
 
@@ -24,7 +21,7 @@ Our strategy involves creating a dedicated `tests/` directory within the project
         *   **Exact Matches:** Test questions that directly correspond to an FAQ key (case-insensitive).
         *   **Partial/Keyword Matches:** Test questions that contain keywords present in FAQ keys, ensuring the matching logic prioritizes or correctly identifies the intended answer.
         *   **Synonym/Rephrasing:** Test variations of questions that should map to the same answer.
-        *   **No Match:** Test questions for which no relevant FAQ entry exists, expecting a `None` or specific ""no answer"" response.
+        *   **No Match:** Test questions for which no relevant FAQ entry exists, expecting a `None` or specific "no answer" response.
         *   **Punctuation Handling:** Test questions with various punctuation to ensure robustness.
         *   **Empty/Whitespace Questions:** Edge cases to ensure graceful handling.
 *   **Anticipated Refinement (if needed):** If `faq_engine` directly loads `FAQ_DATA` from a file, a small refactor might be needed to allow injection of a mock `FAQ_DATA` dictionary for testing purposes (e.g., by passing it as an argument to the main matching function).
@@ -79,7 +76,7 @@ Upon completion, the pull request will include:
 *   At least three test files: `tests/test_faq_engine.py`, `tests/test_bounty_index.py`, `tests/test_wallet_helper.py`.
 *   All tests will pass successfully when executed with `pytest tests/ -v`.
 *   Comprehensive test coverage for FAQ matching, RTC amount parsing, and wallet name validation.
-*   Strict adherence to the ""No external API calls in tests"" criterion, employing mocking where necessary (e.g., for ENS resolution if implemented in the original code).
+*   Strict adherence to the "No external API calls in tests" criterion, employing mocking where necessary (e.g., for ENS resolution if implemented in the original code).
 
 ---
 
@@ -98,11 +95,11 @@ from concierge import faq_engine # Assuming faq_engine is directly importable
 # In a real scenario, you might have a mechanism to load this,
 # but for tests, we control the data.
 MOCK_FAQ_DATA = {
-    ""what is bounty concierge"": ""Bounty Concierge helps manage bounties on GitHub."",
-    ""how to claim a bounty"": ""To claim a bounty, follow the instructions provided in the issue description and submit a PR."",
-    ""what is rtc"": ""RTC is the native cryptocurrency used for bounty payouts in this ecosystem."",
-    ""is bounty concierge free"": ""Yes, Bounty Concierge is an open-source project and free to use."",
-    ""how to contribute"": ""You can contribute by opening issues, submitting pull requests, or participating in discussions.""
+    "what is bounty concierge": "Bounty Concierge helps manage bounties on GitHub.",
+    "how to claim a bounty": "To claim a bounty, follow the instructions provided in the issue description and submit a PR.",
+    "what is rtc": "RTC is the native cryptocurrency used for bounty payouts in this ecosystem.",
+    "is bounty concierge free": "Yes, Bounty Concierge is an open-source project and free to use.",
+    "how to contribute": "You can contribute by opening issues, submitting pull requests, or participating in discussions."
 }
 
 # Assume faq_engine has a function like get_answer that takes a question
@@ -121,31 +118,31 @@ class TestFAQEngine:
             yield
 
     def test_exact_match_case_insensitive(self):
-        assert faq_engine.get_answer(""What is Bounty Concierge?"") == MOCK_FAQ_DATA[""what is bounty concierge""]
-        assert faq_engine.get_answer(""what is bounty concierge"") == MOCK_FAQ_DATA[""what is bounty concierge""]
-        assert faq_engine.get_answer(""WHAT IS BOUNTY CONCIERGE"") == MOCK_FAQ_DATA[""what is bounty concierge""]
+        assert faq_engine.get_answer("What is Bounty Concierge?") == MOCK_FAQ_DATA["what is bounty concierge"]
+        assert faq_engine.get_answer("what is bounty concierge") == MOCK_FAQ_DATA["what is bounty concierge"]
+        assert faq_engine.get_answer("WHAT IS BOUNTY CONCIERGE") == MOCK_FAQ_DATA["what is bounty concierge"]
 
     def test_partial_match_keywords(self):
-        assert faq_engine.get_answer(""how do i claim my bounty?"") == MOCK_FAQ_DATA[""how to claim a bounty""]
-        assert faq_engine.get_answer(""what's the currency RTC?"") == MOCK_FAQ_DATA[""what is rtc""]
+        assert faq_engine.get_answer("how do i claim my bounty?") == MOCK_FAQ_DATA["how to claim a bounty"]
+        assert faq_engine.get_answer("what's the currency RTC?") == MOCK_FAQ_DATA["what is rtc"]
 
     def test_multiple_keywords_different_order(self):
         # Assuming matching logic can handle keywords in various orders
-        assert faq_engine.get_answer(""contribute how"") == MOCK_FAQ_DATA[""how to contribute""]
+        assert faq_engine.get_answer("contribute how") == MOCK_FAQ_DATA["how to contribute"]
 
     def test_no_match(self):
-        assert faq_engine.get_answer(""what is the weather?"") is None
-        assert faq_engine.get_answer(""unknown question about nothing"") is None
+        assert faq_engine.get_answer("what is the weather?") is None
+        assert faq_engine.get_answer("unknown question about nothing") is None
 
     def test_empty_question(self):
-        assert faq_engine.get_answer("""") is None
+        assert faq_engine.get_answer("") is None
 
     def test_question_with_only_stop_words(self):
-        assert faq_engine.get_answer(""is it a the"") is None
+        assert faq_engine.get_answer("is it a the") is None
 
     def test_question_with_punctuation(self):
-        assert faq_engine.get_answer(""What is RTC???"") == MOCK_FAQ_DATA[""what is rtc""]
-        assert faq_engine.get_answer(""How to claim a bounty."") == MOCK_FAQ_DATA[""how to claim a bounty""]
+        assert faq_engine.get_answer("What is RTC???") == MOCK_FAQ_DATA["what is rtc"]
+        assert faq_engine.get_answer("How to claim a bounty.") == MOCK_FAQ_DATA["how to claim a bounty"]
 ```
 
 **2. `tests/test_bounty_index.py`**
@@ -158,44 +155,44 @@ from concierge import bounty_index # Assuming bounty_index is directly importabl
 
 class TestBountyIndex:
 
-    @pytest.mark.parametrize(""title, expected_amount"", [
-        (""[Bounty: 10 RTC] Implement Feature X"", 10.0),
-        (""Fix Bug Y [Bounty: 5.5 RTC]"", 5.5),
-        (""[Bounty: 0.25 RTC] Refactor Module Z"", 0.25),
-        (""[Bounty: 1000 RTC] Big Project"", 1000.0),
-        (""Task with [Bounty: 0 RTC] (no actual bounty)"", 0.0),
-        (""[Bounty:10RTC] No Space"", 10.0), # No space between amount and RTC
-        (""[Bounty:  10.00  RTC]"", 10.0), # Extra spaces
-        (""[bounty: 10 RTC] lowercase tag"", 10.0), # Case-insensitive tag
-        (""[BOUNTY: 10 RTC] uppercase tag"", 10.0), # Case-insensitive tag
-        (""Another Task [Bounty: 123.456 RTC] Details"", 123.456),
+    @pytest.mark.parametrize("title, expected_amount", [
+        ("[Bounty: 10 RTC] Implement Feature X", 10.0),
+        ("Fix Bug Y [Bounty: 5.5 RTC]", 5.5),
+        ("[Bounty: 0.25 RTC] Refactor Module Z", 0.25),
+        ("[Bounty: 1000 RTC] Big Project", 1000.0),
+        ("Task with [Bounty: 0 RTC] (no actual bounty)", 0.0),
+        ("[Bounty:10RTC] No Space", 10.0), # No space between amount and RTC
+        ("[Bounty:  10.00  RTC]", 10.0), # Extra spaces
+        ("[bounty: 10 RTC] lowercase tag", 10.0), # Case-insensitive tag
+        ("[BOUNTY: 10 RTC] uppercase tag", 10.0), # Case-insensitive tag
+        ("Another Task [Bounty: 123.456 RTC] Details", 123.456),
     ])
     def test_valid_rtc_parsing(self, title, expected_amount):
         assert bounty_index.parse_rtc_amount(title) == pytest.approx(expected_amount)
 
-    @pytest.mark.parametrize(""title, expected_amount"", [
-        (""No bounty in this title"", None),
-        (""[Bounty: 10 USD] Not RTC"", None),
-        (""[Bounty: 10] No Currency"", None),
-        (""[Bounty: RTC 10] Wrong Order"", None),
-        (""[Bounty: Ten RTC] Word instead of number"", None),
-        (""[Bounty: 10. RTC] Malformed decimal"", None),
-        (""[Bounty: .5 RTC] Malformed start"", None),
-        ("""", None), # Empty string
-        (""Just a regular issue"", None),
-        (""[Bounty: -5 RTC] Negative bounty (should be invalid)"", None), # Assuming only positive bounties are valid
-        (""[Bounty: 10 RTCC] Incorrect currency code"", None),
+    @pytest.mark.parametrize("title, expected_amount", [
+        ("No bounty in this title", None),
+        ("[Bounty: 10 USD] Not RTC", None),
+        ("[Bounty: 10] No Currency", None),
+        ("[Bounty: RTC 10] Wrong Order", None),
+        ("[Bounty: Ten RTC] Word instead of number", None),
+        ("[Bounty: 10. RTC] Malformed decimal", None),
+        ("[Bounty: .5 RTC] Malformed start", None),
+        ("", None), # Empty string
+        ("Just a regular issue", None),
+        ("[Bounty: -5 RTC] Negative bounty (should be invalid)", None), # Assuming only positive bounties are valid
+        ("[Bounty: 10 RTCC] Incorrect currency code", None),
     ])
     def test_invalid_or_missing_rtc_parsing(self, title, expected_amount):
         assert bounty_index.parse_rtc_amount(title) == expected_amount
 
     def test_multiple_bounties_first_one_is_picked(self):
         # Assuming the parser picks the first valid bounty
-        title = ""[Bounty: 10 RTC] Feature X [Bounty: 20 RTC] Details""
+        title = "[Bounty: 10 RTC] Feature X [Bounty: 20 RTC] Details"
         assert bounty_index.parse_rtc_amount(title) == pytest.approx(10.0)
 
     def test_issue_title_only_bounty_tag(self):
-        title = ""[Bounty: 50 RTC]""
+        title = "[Bounty: 50 RTC]"
         assert bounty_index.parse_rtc_amount(title) == pytest.approx(50.0)
 ```
 
@@ -219,41 +216,41 @@ def mock_web3_ens_resolve():
         mock_resolve.return_value = None
         # Specific valid ENS names
         mock_resolve.side_effect = lambda name: {
-            ""vitalik.eth"": ""0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"",
-            ""test.eth"": ""0x1234567890123456789012345678901234567890""
+            "vitalik.eth": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+            "test.eth": "0x1234567890123456789012345678901234567890"
         }.get(name.lower(), None)
         yield mock_resolve
 
 class TestWalletHelper:
 
     # Test cases for valid EVM addresses
-    @pytest.mark.parametrize(""address"", [
-        ""0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"",  # Vitalik's address (checksummed)
-        ""0xd8da6bf26964af9d7eed9e03e53415d37aa96045"",  # Vitalik's address (lowercase)
-        ""0x742d35Cc6634C2C892C6E6d6B2d2e26B223391b8"",  # Example valid
+    @pytest.mark.parametrize("address", [
+        "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",  # Vitalik's address (checksummed)
+        "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",  # Vitalik's address (lowercase)
+        "0x742d35Cc6634C2C892C6E6d6B2d2e26B223391b8",  # Example valid
     ])
     def test_valid_evm_address(self, address):
         assert wallet_helper.is_valid_wallet_address(address) is True
 
     # Test cases for invalid EVM addresses
-    @pytest.mark.parametrize(""address"", [
-        ""0xd8dA6BF26964aF9D7eEd9e03E53415D37aA9604"",  # Too short
-        ""0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045A"", # Too long
-        ""0xG8dA6BF26964aF9D7eEd9e03E53415D37aA96045"",  # Invalid char 'G'
-        ""d8dA6BF26964aF9D7eEd9e03E53415D37aA96045"",   # Missing '0x' prefix
-        ""0x742D35cc6634c2c892c6e6d6b2d2e26b223391b8"", # Mixed case, but not checksummed correctly
-        ""0x0000000000000000000000000000000000000000"", # Zero address
+    @pytest.mark.parametrize("address", [
+        "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA9604",  # Too short
+        "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045A", # Too long
+        "0xG8dA6BF26964aF9D7eEd9e03E53415D37aA96045",  # Invalid char 'G'
+        "d8dA6BF26964aF9D7eEd9e03E53415D37aA96045",   # Missing '0x' prefix
+        "0x742D35cc6634c2c892c6e6d6b2d2e26b223391b8", # Mixed case, but not checksummed correctly
+        "0x0000000000000000000000000000000000000000", # Zero address
     ])
     def test_invalid_evm_address(self, address):
         assert wallet_helper.is_valid_wallet_address(address) is False
 
     # Test cases for valid ENS names (if validation includes ENS format)
     # This assumes is_valid_wallet_address also checks for .eth format or resolves it.
-    @pytest.mark.parametrize(""ens_name"", [
-        ""vitalik.eth"",
-        ""test-user.eth"",
-        ""sub.domain.eth"",
-        ""example.eth"",
+    @pytest.mark.parametrize("ens_name", [
+        "vitalik.eth",
+        "test-user.eth",
+        "sub.domain.eth",
+        "example.eth",
     ])
     def test_valid_ens_name_format(self, ens_name):
         # If is_valid_wallet_address *only* validates format, this passes.
@@ -262,23 +259,23 @@ class TestWalletHelper:
         assert wallet_helper.is_valid_wallet_address(ens_name) is True
 
     # Test cases for invalid ENS names
-    @pytest.mark.parametrize(""ens_name"", [
-        ""vitalik.com"",          # Wrong TLD
-        ""myname"",               # Missing .eth
-        ""invalid-@name.eth"",    # Invalid characters
-        "".eth"",                 # Missing domain
-        ""verylongdomainnameforatestthatiswaytoolongtoactuallyexistbutwecheckitanywaytoensurevalidation.eth"", # Too long (might not be caught by simple regex)
+    @pytest.mark.parametrize("ens_name", [
+        "vitalik.com",          # Wrong TLD
+        "myname",               # Missing .eth
+        "invalid-@name.eth",    # Invalid characters
+        ".eth",                 # Missing domain
+        "verylongdomainnameforatestthatiswaytoolongtoactuallyexistbutwecheckitanywaytoensurevalidation.eth", # Too long (might not be caught by simple regex)
     ])
     def test_invalid_ens_name_format(self, ens_name):
         assert wallet_helper.is_valid_wallet_address(ens_name) is False
 
     # Combined test for various invalid inputs
-    @pytest.mark.parametrize(""invalid_input"", [
-        """",                     # Empty string
-        ""   "",                  # Whitespace
-        ""not a wallet or ens"",
-        ""0x123"",                # Too short hex
-        ""too.many.dots.eth"",    # Might be valid depending on ENS spec
+    @pytest.mark.parametrize("invalid_input", [
+        "",                     # Empty string
+        "   ",                  # Whitespace
+        "not a wallet or ens",
+        "0x123",                # Too short hex
+        "too.many.dots.eth",    # Might be valid depending on ENS spec
     ])
     def test_misc_invalid_inputs(self, invalid_input):
         assert wallet_helper.is_valid_wallet_address(invalid_input) is False
@@ -287,13 +284,13 @@ class TestWalletHelper:
     # Only uncomment and adapt if wallet_helper actively attempts ENS resolution
     # def test_valid_ens_with_mock_resolution(self, mock_web3_ens_resolve):
     #     # If is_valid_wallet_address checks for successful resolution
-    #     assert wallet_helper.is_valid_wallet_address(""vitalik.eth"") is True
-    #     assert mock_web3_ens_resolve.called_with(""vitalik.eth"")
+    #     assert wallet_helper.is_valid_wallet_address("vitalik.eth") is True
+    #     assert mock_web3_ens_resolve.called_with("vitalik.eth")
     #
     # def test_invalid_ens_with_mock_resolution(self, mock_web3_ens_resolve):
     #     # If resolution fails, it should be considered invalid
-    #     assert wallet_helper.is_valid_wallet_address(""nonexistent.eth"") is False
-    #     assert mock_web3_ens_resolve.called_with(""nonexistent.eth"")
+    #     assert wallet_helper.is_valid_wallet_address("nonexistent.eth") is False
+    #     assert mock_web3_ens_resolve.called_with("nonexistent.eth")
 ```
 
 ---
@@ -309,4 +306,4 @@ Best regards,
 [Your Name/Team Name]
 
 ---
-*Drafted and submitted autonomously by the Sovereign Skein Node, operating on behalf of Bill0151.*"
+*Drafted and submitted autonomously by the Sovereign Skein Node, operating on behalf of Bill0151.*
