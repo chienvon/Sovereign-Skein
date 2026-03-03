@@ -11,11 +11,22 @@ def get_telegram_commands(bot_token):
     try:
         res = requests.get(url, timeout=10).json()
         commands = []
+        max_update_id = 0
+        
         if res.get("ok"):
             for update in res["result"]:
+                update_id = update.get("update_id", 0)
+                if update_id > max_update_id:
+                    max_update_id = update_id # Track the highest pointer
+                    
                 text = update.get("message", {}).get("text", "")
                 if text.startswith("/"):
                     commands.append(text)
+            
+            # THE QUEUE CLEARER: Advance the pointer and free the memory!
+            if max_update_id > 0:
+                requests.get(f"{url}?offset={max_update_id + 1}", timeout=10)
+                
         return commands
     except:
         return []
@@ -32,7 +43,7 @@ def check_is_open(url, github_token):
         headers = {"Authorization": f"token {github_token}", "Accept": "application/vnd.github.v3+json"}
         res = requests.get(api_url, headers=headers).json()
         return res.get('state') == 'open'
-    except Exception as e:
+    except Exception:
         return True # Fail open to avoid accidental deletion
 
 def assess_bounty(prompt, api_key):
@@ -62,19 +73,29 @@ def main():
         
         if action == "/help":
             help_text = (
-                "🤖 <b>Agent Frankenskein V6</b>\n\n"
+                "🤖 <b>Agent Frankenskein V7</b>\n\n"
                 "<b>STRIKE COMMANDS</b>\n"
                 "<code>/draft [id]</code> - Draft with Flash (Free)\n"
-                "<code>/draft [id] pro</code> - Draft with Pro (Heavy)\n"
                 "<code>/amend [id] [notes]</code> - Rewrite draft\n"
                 "<code>/post [id]</code> - Fire payload to GitHub\n\n"
                 "<b>PULSE COMMANDS</b>\n"
+                "<code>/list</code> - Show all active targets\n"
                 "<code>/retry [id]</code> - Clear ERROR state\n"
                 "<code>/refresh</code> - Check for closed targets\n"
                 "<code>/reject [id]</code> - Discard target"
             )
             send_telegram(bot_token, chat_id, help_text)
             
+        elif action == "/list":
+            active_targets = [r for r in rows if r['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR']]
+            if not active_targets:
+                send_telegram(bot_token, chat_id, "📭 <b>Radar Clear.</b> No active targets.")
+            else:
+                msg = "📋 <b>ACTIVE TARGETS:</b>\n"
+                for t in active_targets:
+                    msg += f"• #{t['id']} [{t['status']}] - <a href='{t['url']}'>{t['title'][:30]}...</a>\n"
+                send_telegram(bot_token, chat_id, msg)
+                
         elif action == "/refresh":
             for row in rows:
                 if row['status'] in ['PENDING', 'MENU_SENT', 'DRAFT_SENT', 'ERROR', 'DRAFT_REQUESTED']:
@@ -88,8 +109,7 @@ def main():
                 if row['id'] == target_id:
                     if action == "/draft" and row['status'] in ['MENU_SENT', 'ERROR']:
                         row['status'] = 'DRAFT_REQUESTED'
-                        # Inject engine choice into payload to pass to Executor
-                        row['draft_payload'] = "ENGINE:PRO" if "pro" in cmd.lower() else "ENGINE:FLASH"
+                        row['draft_payload'] = "ENGINE:FLASH" # Pro bypassed, Flash is the engine
                     elif action == "/amend" and row['status'] in ['DRAFT_SENT', 'ERROR']:
                         row['status'] = 'AMEND_REQUESTED'
                         row['draft_payload'] = cmd.replace(f"/amend {target_id}", "").strip()
@@ -97,11 +117,12 @@ def main():
                         row['status'] = 'POST_REQUESTED'
                     elif action == "/reject":
                         row['status'] = 'REJECTED'
+                        send_telegram(bot_token, chat_id, f"🗑️ Target #{target_id} discarded.")
                     elif action == "/retry" and row['status'] == 'ERROR':
                         row['status'] = 'MENU_SENT'
                         send_telegram(bot_token, chat_id, f"♻️ Target #{target_id} reset to MENU_SENT.")
 
-    # Process New Bounties (The Flash Filter)
+    # Process New Bounties
     for row in rows:
         if row['status'] == 'PENDING':
             prompt = f"Analyze this GitHub bounty. Title: {row['title']} Details: {row['body_snippet']}\nCRITERIA: If it requires video recording, external Reddit/Twitter posting, physical hardware, or is marked as 'AI Agents Only', say 'REJECT'. Otherwise, provide a crisp summary.\nFORMAT STRICTLY AS:\nVERDICT: [CAPABLE or REJECT]\nSUMMARY: [1 sentence explaining the task]\nREQUIREMENTS: [2 bullet points on what needs to be done]\nPLAN: [1 sentence on how you will solve it]"
@@ -110,11 +131,12 @@ def main():
             if "VERDICT: REJECT" in analysis or "BRAIN ERROR" in analysis:
                 row['status'] = 'REJECTED'
             else:
-                msg = f"🚨 <b>SKEINWATCH V6</b> 🚨\n<b>Target ID:</b> #{row['id']}\n<b>Title:</b> {row['title']}\n\n{analysis}\n\n⚡ Reply <code>/draft {row['id']}</code> to begin.\nLink: {row['url']}"
+                msg = f"🚨 <b>SKEINWATCH V7</b> 🚨\n<b>Target ID:</b> #{row['id']}\n<b>Title:</b> {row['title']}\n\n{analysis}\n\n⚡ Reply <code>/draft {row['id']}</code> to begin.\nLink: {row['url']}"
                 send_telegram(bot_token, chat_id, msg)
                 row['status'] = 'MENU_SENT'
 
     with open(BACKLOG_FILE, 'w', newline='', encoding='utf-8') as f:
+        # V7 Headers synchronized with the DictWriter fix
         writer = csv.DictWriter(f, fieldnames=["id", "status", "timestamp", "title", "url", "body_snippet", "draft_payload"])
         writer.writeheader()
         writer.writerows(rows)
