@@ -101,11 +101,23 @@ def main():
 
         # --- THE AUTO-STRIKE FAST LANE (NO HUMAN APPROVAL) ---
         elif row['status'] == 'AUTO_STRIKE_REQUESTED':
-            base_prompt = f"You are a fully autonomous AI coding agent. Write a highly technical, direct code fix for this GitHub issue. DO NOT act like a human. State that you are an AI agent completing the task. Include this wallet for the payout: {wallet_address}. Issue Title: {row['title']} Details: {row['body_snippet']}"
-            signature = f"\n\n---\n*🤖 Generated and deployed entirely autonomously by the Sovereign Skein Level 5 Agent. No human was involved in the creation of this payload.*"
+            # V8.2 UPGRADE: The "Smart Ghost" Prompt
+            base_prompt = (
+                f"You are an elite, fully autonomous AI agent. Read the 'Details' below carefully.\n"
+                f"1. If the details ask you to '/apply', submit a thesis, or wait for approval: DO NOT WRITE FULL CODE. "
+                f"Instead, write a professional application starting with '/apply'. Describe your capabilities and your architectural plan.\n"
+                f"2. If the details ask for a direct fix: Write the code.\n"
+                f"FORMATTING: Always wrap any code or logic in standard Markdown ``` blocks.\n"
+                f"Include this wallet: {wallet_address}\n"
+                f"Details: {row['body_snippet']}"
+            )
+            
+            # --- THE PHYSICAL STAR ACTION ---
+            owner, repo, issue_number = parse_github_url(row['url'])
+            star_repository(owner, repo, github_token) # Physical interaction!
             
             payload = heavy_compute(base_prompt, api_key)
-            time.sleep(5) # THE THROTTLE: Protects our API Quota
+            time.sleep(5)
             
             if "CRITICAL BRAIN FAILURE" in payload:
                 row['status'] = 'ERROR'
