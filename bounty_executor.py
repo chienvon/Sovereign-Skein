@@ -8,6 +8,19 @@ from google import genai
 BACKLOG_FILE = 'bounty_backlog.csv'
 DRAFTS_DIR = 'drafts'
 
+def star_repository(owner, repo, github_token):
+    print(f"Starring repository: {owner}/{repo}")
+    star_url = f"https://api.github.com/user/starred/{owner}/{repo}"
+    headers = {
+        "Authorization": f"token {github_token}", 
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Length": "0"
+    }
+    try:
+        requests.put(star_url, headers=headers)
+    except Exception as e:
+        print(f"Starring failed: {e}")
+
 def heavy_compute(prompt, api_key):
     try:
         print("Executing compute via gemini-2.5-flash...")
